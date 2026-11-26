@@ -45,3 +45,11 @@ lib/shipping.ts           Cálculo del envío
 components/               Piezas visuales
 supabase/schema.sql       Esquema de la base de datos
 ```
+
+## Publicación (importante)
+
+Netlify (plan gratuito) sólo publica commits cuyo autor sea un miembro de su equipo.
+Con autorización del dueño, los commits van firmados como **Javier Weintraub <javierweintraub@gmail.com>**
+(`git -c user.name="Javier Weintraub" -c user.email="javierweintraub@gmail.com" commit ...`);
+si no, el deploy falla con «unrecognized Git contributor» y el sitio queda en la versión anterior.
+Después de cada push, verificar en Netlify que el deploy quede «Published».
