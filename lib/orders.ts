@@ -12,7 +12,6 @@ import { logEvent } from './log';
 import { PROVINCES } from './micorreo';
 import { provincesForZip } from './postal';
 import { verifiedBranch } from './branches';
-import { micorreoEnabled } from './micorreo';
 
 export type Address = {
   street: string;
@@ -139,14 +138,12 @@ export async function startCheckout(input: Record<string, unknown>) {
   };
   let agency_code = clean(input.agency_code, 20) || null;
   // Con la lista oficial de Correo Argentino activa, sólo se acepta una sucursal verificada en esa lista.
-  if (ship.modality === 'sucursal' && micorreoEnabled()) {
+  if (ship.modality === 'sucursal') {
     if (!agency_code) throw new CheckoutError('Elegí la sucursal de Correo Argentino donde querés retirar.');
     const b = await verifiedBranch(province, agency_code);
     if (!b) throw new CheckoutError('No pudimos verificar esa sucursal. Volvé a buscar y elegí una de la lista.');
     agency_code = b.code;
-    address.agency_note = `${b.name} — ${b.street}, ${b.locality}${b.postalCode ? ` (CP ${b.postalCode})` : ''}`;
-  } else {
-    agency_code = null; // sin lista oficial, la sucursal es la que escribió el comprador
+    address.agency_note = `${b.street}, ${b.locality} (sucursal ${b.code})`;
   }
   if (ship.modality === 'domicilio' && (!address.street || !address.number || !address.city))
     throw new CheckoutError('Completá la dirección de entrega.');

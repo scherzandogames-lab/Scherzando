@@ -1,7 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-type Branch = { code: string; name: string; street: string; locality: string; postalCode: string; hours: string[]; distanceKm: number | null };
+type Branch = { code: string; name: string; street: string; locality: string; postalCode: string; hours: string[]; distanceKm: number | null; approx?: boolean };
+
+const dist = (b: Branch) =>
+  b.distanceKm === null ? '' : b.approx && b.distanceKm < 3 ? ' · en tu localidad' : ` · a ${b.distanceKm.toLocaleString('es-AR')} km aprox.`;
 
 /**
  * Sucursales oficiales de Correo Argentino cercanas al comprador, dentro del checkout.
@@ -49,7 +52,7 @@ export default function BranchPicker(props: { province: string; zip: string; loc
       <p className="branches-title">Elegí la sucursal de Correo Argentino donde querés retirar</p>
       <div className="branches-search" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setChosen(null); search(qZip, qLoc); } }}>
         <label className="f">Código postal<input value={qZip} onChange={(e) => setQZip(e.target.value)} inputMode="numeric" maxLength={10} aria-label="Código postal para buscar sucursales" /></label>
-        <label className="f">Localidad o barrio<input value={qLoc} onChange={(e) => setQLoc(e.target.value)} maxLength={80} aria-label="Localidad o barrio para buscar sucursales" /></label>
+        <label className="f">Localidad, barrio o una dirección<input value={qLoc} onChange={(e) => setQLoc(e.target.value)} maxLength={80} aria-label="Localidad, barrio o dirección para buscar sucursales" placeholder="Ej. Palermo o Av. Santa Fe 3000" /></label>
         <button type="button" className="btn-sm" onClick={() => { setChosen(null); search(qZip, qLoc); }}>Buscar sucursales</button>
       </div>
       {state.loading && <p className="muted">Buscando sucursales…</p>}
@@ -58,8 +61,8 @@ export default function BranchPicker(props: { province: string; zip: string; loc
         <div className="branch chosen">
           <div>
             <p className="branch-name">✓ {chosen.name}</p>
-            <p>{chosen.street}</p>
-            <p className="muted">{chosen.locality}{chosen.postalCode ? ` · CP ${chosen.postalCode}` : ''}</p>
+            {chosen.street !== chosen.name && <p>{chosen.street}</p>}
+            <p className="muted">{chosen.locality}{chosen.postalCode ? ` · CP ${chosen.postalCode}` : ''} · código {chosen.code}</p>
             {chosen.hours.map((h) => <p key={h} className="small muted">{h}</p>)}
           </div>
           <button type="button" className="btn-sm" onClick={() => setChosen(null)}>Cambiar sucursal</button>
@@ -72,8 +75,9 @@ export default function BranchPicker(props: { province: string; zip: string; loc
                 <div className="branch" key={b.code}>
                   <div>
                     <p className="branch-name">{b.name}</p>
-                    <p>{b.street}</p>
-                    <p className="muted">{b.locality}{b.postalCode ? ` · CP ${b.postalCode}` : ''}{b.distanceKm !== null ? ` · a ${b.distanceKm.toLocaleString('es-AR')} km aprox.` : ''}</p>
+                    {b.street !== b.name && <p>{b.street}</p>}
+                    <p className="muted">{b.locality}{b.postalCode ? ` · CP ${b.postalCode}` : ''}{dist(b)}</p>
+                    <p className="small muted">Código de sucursal {b.code}</p>
                     {b.hours.map((h) => <p key={h} className="small muted">{h}</p>)}
                   </div>
                   <button type="button" className="btn btn-gold" onClick={() => setChosen(b)}>Seleccionar esta sucursal</button>

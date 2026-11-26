@@ -56,7 +56,7 @@ const ACCENTS: Record<string, string> = Object.fromEntries(
     'Gallegos Calafate Chaltén Ushuaia Tolhuin Pampa Realicó Toay Macachín Victorica Mercedes Merlo Juárez Carhué Darregueira Ayacucho Maipú')
     .split(' ').filter((w) => /[áéíóúñüÁÉÍÓÚÑÜ]/.test(w)).map((w) => [norm(w), w]),
 );
-const accent = (name: string) => name.split(' ').map((w) => ACCENTS[norm(w)] ?? w).join(' ');
+export const accent = (name: string) => name.split(' ').map((w) => ACCENTS[norm(w)] ?? w).join(' ');
 
 /**
  * Localidades de un código postal en una provincia.
