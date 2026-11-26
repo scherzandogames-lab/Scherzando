@@ -4,7 +4,7 @@ import { db } from './supabase';
 import { env } from './env';
 import { siteOrigin } from './origin';
 import { getContent } from './settings';
-import { formatARS, zipNumber, productById, units, MAIN_SKU, type Product, type SiteContent } from './content';
+import { formatARS, zipNumber, productById, units, MAIN_SKU, hasAnyRate, type Product, type SiteContent } from './content';
 import { sendMail, layout, button, esc } from './email';
 import { getStock, releaseExpired } from './stock';
 import { shippingOptionsFor, ShippingError } from './shipping';
@@ -78,7 +78,7 @@ export async function saleStatus(c: SiteContent, productId: string = MAIN_SKU): 
   if (stock === null) return { ok: false, stock, label: 'Disponibilidad a confirmar', reason: 'Muy pronto a la venta.' };
   if (stock <= 0) return { ok: false, stock, label: 'Sin stock por el momento', reason: 'Volvé pronto: estamos reponiendo.' };
   if (!c.payment.cbu && !c.payment.alias) return { ok: false, stock, label: 'Disponible', reason: 'La compra en línea se habilita en breve.' };
-  if (!c.shipping.options.some((o) => o.price !== null)) return { ok: false, stock, label: 'Disponible', reason: 'Estamos cargando las tarifas de envío.' };
+  if (!hasAnyRate(c)) return { ok: false, stock, label: 'Disponible', reason: 'Estamos cargando las tarifas de envío.' };
   return { ok: true, stock, label: stock <= 5 ? `Últimas ${stock} unidades` : 'Disponible', reason: null };
 }
 
@@ -113,13 +113,13 @@ export async function startCheckout(input: Record<string, unknown>) {
 
   let quotes;
   try {
-    quotes = await shippingOptionsFor(c, zip, quantity);
+    quotes = await shippingOptionsFor(c, zip, quantity, province);
   } catch (e) {
     if (e instanceof ShippingError) throw new CheckoutError(e.message);
     throw e;
   }
   const ship = quotes.find((q) => q.id === clean(input.shipping, 60));
-  if (!ship) throw new CheckoutError('Elegí una opción de envío válida para tu código postal.');
+  if (!ship) throw new CheckoutError(quotes.length ? 'Elegí una opción de envío.' : 'Todavía no tenemos la tarifa de envío para tu provincia. Escribinos y lo resolvemos.');
 
   const address: Address = {
     street: clean(input.street, 120),

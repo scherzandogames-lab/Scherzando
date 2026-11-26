@@ -9,7 +9,7 @@ import { setStock } from '@/lib/stock';
 import { appendNote, markPaid, notifyDispatched, orderRef, type Order } from '@/lib/orders';
 import { importShipment, micorreoEnabled, PROVINCES } from '@/lib/micorreo';
 import { logEvent } from '@/lib/log';
-import { zipNumber, type SiteContent, type ShippingOption, type ExtraProduct } from '@/lib/content';
+import { zipNumber, PROVINCE_NAMES, type SiteContent, type ProvinceRate, type ExtraProduct } from '@/lib/content';
 import { sendMail, layout } from '@/lib/email';
 import { env } from '@/lib/env';
 
@@ -56,19 +56,11 @@ async function patch(fn: (c: SiteContent) => SiteContent) {
 /** Precio, stock y envíos. */
 export async function saveStore(form: FormData) {
   await patch((c) => {
-    const options: ShippingOption[] = [];
-    for (let i = 0; i < 8; i++) {
-      const zone = s(form, `opt_${i}_zone`, 80);
-      if (!zone) continue;
-      const region = s(form, `opt_${i}_region`) as ShippingOption['region'];
-      const modality = s(form, `opt_${i}_modality`) as ShippingOption['modality'];
-      options.push({
-        id: `${region}-${modality}-${i}`,
-        zone,
-        region: ['amba', 'interior', 'todo'].includes(region) ? region : 'todo',
-        modality: modality === 'sucursal' ? 'sucursal' : 'domicilio',
-        price: money(form, `opt_${i}_price`),
-      });
+    const rates: ProvinceRate[] = [];
+    for (let i = 0; i < PROVINCE_NAMES.length; i++) {
+      const province = s(form, `rate_${i}_province`, 60);
+      if (!PROVINCE_NAMES.includes(province)) continue;
+      rates.push({ province, domicilio: money(form, `rate_${i}_domicilio`), sucursal: money(form, `rate_${i}_sucursal`) });
     }
     return {
       ...c,
@@ -84,7 +76,7 @@ export async function saveStore(form: FormData) {
       shipping: {
         ...c.shipping,
         quotedAt: s(form, 'quotedAt', 40),
-        options,
+        rates,
         pkg: {
           originZip: zipNumber(s(form, 'originZip', 10)) ? s(form, 'originZip', 10) : '',
           weightG: int(form, 'weightG'),

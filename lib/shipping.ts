@@ -1,7 +1,7 @@
 import 'server-only';
 import { micorreoEnabled, quote } from './micorreo';
 import { logEvent } from './log';
-import { MODALITY_LABEL, regionOfZip, zipNumber, type ShippingOption, type SiteContent } from './content';
+import { MODALITY_LABEL, zipNumber, ratesOf, provinceSlug, PROVINCE_NAMES, type ShippingOption, type SiteContent } from './content';
 
 export type ShippingQuote = {
   id: string;
@@ -18,11 +18,11 @@ const pkgReady = (c: SiteContent) => {
   return !!(zipNumber(p.originZip) && p.weightG && p.heightCm && p.widthCm && p.lengthCm);
 };
 
-/** Opciones de envío disponibles para un código postal y una cantidad, con su costo. */
-export async function shippingOptionsFor(c: SiteContent, zip: string, qty: number): Promise<ShippingQuote[]> {
-  const region = regionOfZip(zip);
-  if (!region) throw new ShippingError('Revisá el código postal (4 números, por ejemplo 1425).');
-  const valid = c.shipping.options.filter((o) => o.region === 'todo' || o.region === region);
+/** Opciones de envío para una provincia y un código postal, con su costo. */
+export async function shippingOptionsFor(c: SiteContent, zip: string, qty: number, province: string): Promise<ShippingQuote[]> {
+  if (!zipNumber(zip)) throw new ShippingError('Revisá el código postal (4 números, por ejemplo 1425).');
+  if (!PROVINCE_NAMES.includes(province)) throw new ShippingError('Elegí tu provincia.');
+  const slug = provinceSlug(province);
 
   // Cotización en línea con Correo Argentino, si la integración está activa.
   if (micorreoEnabled() && pkgReady(c)) {
@@ -39,8 +39,7 @@ export async function shippingOptionsFor(c: SiteContent, zip: string, qty: numbe
       const out: ShippingQuote[] = [];
       for (const m of ['domicilio', 'sucursal'] as const) {
         const rate = r.rates.find((x) => x.deliveredType === (m === 'domicilio' ? 'D' : 'S'));
-        const opt = valid.find((o) => o.modality === m);
-        if (rate && opt) out.push({ id: opt.id, label: `${opt.zone} · ${MODALITY_LABEL[m]}`, modality: m, cost: Math.ceil(rate.price), source: 'micorreo' });
+        if (rate) out.push({ id: `${slug}-${m}`, label: `${province} · ${MODALITY_LABEL[m]}`, modality: m, cost: Math.ceil(rate.price), source: 'micorreo' });
       }
       if (out.length) return out;
     } catch (e) {
@@ -48,7 +47,14 @@ export async function shippingOptionsFor(c: SiteContent, zip: string, qty: numbe
     }
   }
 
-  return valid
-    .filter((o) => o.price !== null)
-    .map((o) => ({ id: o.id, label: `${o.zone} · ${MODALITY_LABEL[o.modality]}`, modality: o.modality, cost: o.price!, source: 'tabla' as const }));
+  const rate = ratesOf(c).find((r) => r.province === province)!;
+  const out: ShippingQuote[] = [];
+  for (const m of ['domicilio', 'sucursal'] as const) {
+    const cost = rate[m];
+    if (cost !== null) out.push({ id: `${slug}-${m}`, label: `${province} · ${MODALITY_LABEL[m]}`, modality: m, cost, source: 'tabla' });
+  }
+  return out;
 }
+
+// Compatibilidad: el tipo de opción anterior sigue existiendo para la integración MiCorreo.
+export type { ShippingOption };

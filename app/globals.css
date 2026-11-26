@@ -393,3 +393,9 @@ section > * { max-width: var(--max); margin-left: auto; margin-right: auto; }
 .more-card h3 { color: var(--bordo); margin: 0; }
 .more-card p { margin: 0; color: var(--tinta-suave); font-size: 1.05rem; }
 .more-card .price { color: var(--bordo); font-size: 1.4rem; }
+
+/* Envío por provincia */
+.adm-row.prov { grid-template-columns: 1.6fr 1fr 1fr; min-width: 0; align-items: center; }
+.adm-row.prov > span { font-size: .92rem; }
+.ship-details { margin: 20px 0 12px; }
+.ship-details summary { cursor: pointer; font-family: var(--sans); font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bordo); padding: 12px 0; }

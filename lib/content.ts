@@ -14,6 +14,9 @@ export type ShippingOption = {
   price: number | null; // importe de Correo Argentino cargado por el administrador
 };
 
+/** Tarifa de envío de una provincia (null = todavía sin cargar). */
+export type ProvinceRate = { province: string; domicilio: number | null; sucursal: number | null };
+
 export type GalleryItem = { src: string; alt: string; caption: string };
 
 /** Producto adicional cargado desde el panel (el mazo es el producto principal). */
@@ -56,6 +59,8 @@ export type SiteContent = {
     intro: string;
     quotedAt: string;
     options: ShippingOption[];
+    /** Precio del envío para cada provincia, cargado por el administrador. */
+    rates: ProvinceRate[];
     dispatchInfo: string;
     /** Datos del paquete y del origen, necesarios para cotizar con la API de MiCorreo. */
     pkg: { originZip: string; weightG: number | null; heightCm: number | null; widthCm: number | null; lengthCm: number | null };
@@ -154,6 +159,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     ],
     dispatchInfo: 'Cuando despachamos tu pedido te enviamos por correo electrónico el número de seguimiento de Correo Argentino.',
     pkg: { originZip: '', weightG: null, heightCm: null, widthCm: null, lengthCm: null },
+    rates: [],
   },
   faq: [
     {
@@ -214,6 +220,7 @@ export function mergeContent(saved: Partial<SiteContent> | null | undefined): Si
       ...obj(d.shipping, saved.shipping),
       options: Array.isArray(saved.shipping?.options) ? saved.shipping!.options : d.shipping.options,
       pkg: obj(d.shipping.pkg, saved.shipping?.pkg),
+      rates: Array.isArray(saved.shipping?.rates) ? saved.shipping!.rates : [],
     },
     faq: Array.isArray(saved.faq) ? saved.faq : d.faq,
     closing: obj(d.closing, saved.closing),
@@ -275,3 +282,17 @@ export function productById(c: SiteContent, id: string | null | undefined): Prod
 }
 
 export const units = (p: Pick<Product, 'unit'>, n: number) => `${n} ${n === 1 ? p.unit[0] : p.unit[1]}`;
+
+/** Las 24 jurisdicciones, en el orden en que se muestran. */
+export const PROVINCE_NAMES = [
+  'Ciudad Autónoma de Buenos Aires', 'Buenos Aires', 'Catamarca', 'Chaco', 'Chubut', 'Córdoba', 'Corrientes',
+  'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja', 'Mendoza', 'Misiones', 'Neuquén', 'Río Negro',
+  'Salta', 'San Juan', 'San Luis', 'Santa Cruz', 'Santa Fe', 'Santiago del Estero', 'Tierra del Fuego', 'Tucumán',
+];
+
+/** Tarifa cargada para una provincia (siempre devuelve las 24, con null si falta). */
+export function ratesOf(c: SiteContent): ProvinceRate[] {
+  return PROVINCE_NAMES.map((province) => c.shipping.rates.find((r) => r.province === province) ?? { province, domicilio: null, sucursal: null });
+}
+export const hasAnyRate = (c: SiteContent) => c.shipping.rates.some((r) => r.domicilio !== null || r.sucursal !== null);
+export const provinceSlug = (p: string) => p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');

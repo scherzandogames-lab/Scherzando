@@ -6,7 +6,7 @@ import { mailProvider } from '@/lib/email';
 import { micorreoEnabled } from '@/lib/micorreo';
 import { getContent } from '@/lib/settings';
 import { getStock, releaseExpired } from '@/lib/stock';
-import { formatARS } from '@/lib/content';
+import { formatARS, hasAnyRate } from '@/lib/content';
 import AdminNav from '@/components/admin/AdminNav';
 import LoginForm from '@/components/admin/LoginForm';
 import { sendTestMail } from './actions';
@@ -46,7 +46,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     ['Correo Argentino automático', micorreoEnabled(), 'Sin credenciales de la API MiCorreo: los envíos se cargan a mano en MiCorreo y el costo sale de la tabla.'],
     ['Precio cargado', c.sale.price !== null, 'Cargalo en «Productos».'],
     ['Stock cargado', (stock ?? 0) > 0, 'Cargalo en «Productos».'],
-    ['Tarifas de envío', c.shipping.options.some((o) => o.price !== null), 'Cargá los importes de Correo Argentino.'],
+    ['Tarifas de envío', hasAnyRate(c), 'Cargá el precio de envío de cada provincia en «Pagos y envíos».'],
   ];
 
   return (

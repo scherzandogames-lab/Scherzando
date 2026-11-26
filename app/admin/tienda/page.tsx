@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { isAdmin } from '@/lib/auth';
 import { getContent } from '@/lib/settings';
+import { ratesOf } from '@/lib/content';
 import { micorreoEnabled } from '@/lib/micorreo';
 import AdminNav from '@/components/admin/AdminNav';
 import { saveStore } from '../actions';
@@ -13,7 +14,6 @@ export default async function Tienda({ searchParams }: { searchParams: Promise<{
   if (!(await isAdmin())) redirect('/admin');
   const { ok } = await searchParams;
   const c = await getContent();
-  const rows = [...c.shipping.options, ...Array(Math.max(0, 8 - c.shipping.options.length)).fill(null)].slice(0, 8);
   const p = c.shipping.pkg;
 
   return (
@@ -37,27 +37,20 @@ export default async function Tienda({ searchParams }: { searchParams: Promise<{
           <label className="f">Horas de reserva sin pago<input name="pay_hold" inputMode="numeric" defaultValue={c.payment.holdHours} /><small>Pasado ese plazo, el pedido se cancela y el stock vuelve.</small></label>
         </div>
 
-        <h2>Tarifas de envío de Correo Argentino</h2>
+        <h2>Costo de envío por provincia</h2>
         <p className="muted">
           {micorreoEnabled()
             ? 'La cotización automática de MiCorreo está activa: estos importes sólo se usan si Correo Argentino no responde.'
-            : 'Cotizá en MiCorreo el paquete con un mazo y cargá acá el importe de cada opción. Zona «CABA y GBA» = códigos postales 1000 a 1893; el sistema le muestra a cada comprador sólo las opciones de su zona.'}
+            : 'Cargá el precio de envío de cada provincia. Si dejás una casilla vacía, esa opción no se ofrece; si una provincia no tiene ningún precio, sus compradores no pueden comprar.'}
         </p>
         <div className="adm-table">
-          <div className="adm-row head"><span>Nombre de la zona</span><span>Códigos postales</span><span>Modalidad</span><span>Importe ($)</span></div>
-          {rows.map((o, i) => (
-            <div className="adm-row" key={i}>
-              <input name={`opt_${i}_zone`} defaultValue={o?.zone ?? ''} placeholder="(vacío = sin usar)" aria-label="Zona" />
-              <select name={`opt_${i}_region`} defaultValue={o?.region ?? 'interior'} aria-label="Códigos postales">
-                <option value="amba">CABA y GBA</option>
-                <option value="interior">Resto del país</option>
-                <option value="todo">Todo el país</option>
-              </select>
-              <select name={`opt_${i}_modality`} defaultValue={o?.modality ?? 'domicilio'} aria-label="Modalidad">
-                <option value="domicilio">A domicilio</option>
-                <option value="sucursal">Retiro en sucursal</option>
-              </select>
-              <input name={`opt_${i}_price`} inputMode="numeric" defaultValue={o?.price ?? ''} placeholder="a confirmar" aria-label="Importe" />
+          <div className="adm-row prov head"><span>Provincia</span><span>A domicilio ($)</span><span>Retiro en sucursal ($)</span></div>
+          {ratesOf(c).map((r, i) => (
+            <div className="adm-row prov" key={r.province}>
+              <input type="hidden" name={`rate_${i}_province`} value={r.province} />
+              <span>{r.province}</span>
+              <input name={`rate_${i}_domicilio`} inputMode="numeric" defaultValue={r.domicilio ?? ''} placeholder="sin cargar" aria-label={`${r.province}, a domicilio`} />
+              <input name={`rate_${i}_sucursal`} inputMode="numeric" defaultValue={r.sucursal ?? ''} placeholder="sin cargar" aria-label={`${r.province}, en sucursal`} />
             </div>
           ))}
         </div>

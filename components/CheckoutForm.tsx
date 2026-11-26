@@ -25,20 +25,20 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
 
   // Cotiza el envío cuando el código postal está completo (y al cambiar la cantidad).
   useEffect(() => {
-    if (!/^[A-Za-z]?\d{4}[A-Za-z]{0,3}$/.test(zip.trim())) {
+    if (!/^[A-Za-z]?\d{4}[A-Za-z]{0,3}$/.test(zip.trim()) || !province) {
       setQuotes(null);
       return;
     }
     const ctrl = new AbortController();
     setLoadingQ(true);
     setQuoteErr('');
-    fetch(`/api/envio/cotizar?cp=${encodeURIComponent(zip.trim())}&cantidad=${qty}`, { signal: ctrl.signal })
+    fetch(`/api/envio/cotizar?cp=${encodeURIComponent(zip.trim())}&provincia=${encodeURIComponent(province)}&cantidad=${qty}`, { signal: ctrl.signal })
       .then(async (r) => {
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'No pudimos calcular el envío.');
         setQuotes(j.options);
         setShip((s) => (j.options.some((o: Quote) => o.id === s) ? s : ''));
-        if (!j.options.length) setQuoteErr('Todavía no hay tarifas cargadas para tu zona. Escribinos y lo resolvemos.');
+        if (!j.options.length) setQuoteErr('Todavía no tenemos la tarifa de envío para tu provincia. Escribinos y lo resolvemos.');
       })
       .catch((e) => {
         if (e.name !== 'AbortError') {
@@ -48,7 +48,7 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
       })
       .finally(() => setLoadingQ(false));
     return () => ctrl.abort();
-  }, [zip, qty]);
+  }, [zip, qty, province]);
 
   // Lista oficial de sucursales (sólo si la integración con MiCorreo está activa).
   useEffect(() => {

@@ -9,9 +9,10 @@ export async function GET(req: Request) {
   const u = new URL(req.url);
   const zip = (u.searchParams.get('cp') ?? '').slice(0, 10);
   const qty = Math.min(20, Math.max(1, Number(u.searchParams.get('cantidad')) || 1));
+  const province = (u.searchParams.get('provincia') ?? '').slice(0, 60);
   try {
     const c = await getContent();
-    const options = await shippingOptionsFor(c, zip, qty);
+    const options = await shippingOptionsFor(c, zip, qty, province);
     return NextResponse.json({ options });
   } catch (e) {
     if (e instanceof ShippingError) return NextResponse.json({ error: e.message }, { status: 400 });

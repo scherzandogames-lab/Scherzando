@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { getContent } from '@/lib/settings';
 import { siteOrigin } from '@/lib/origin';
 import { saleStatus } from '@/lib/orders';
-import { PHOTOS, formatARS, MODALITY_LABEL, photoSize, photoAlt, productsOf } from '@/lib/content';
+import { PHOTOS, formatARS, MODALITY_LABEL, photoSize, photoAlt, productsOf, ratesOf } from '@/lib/content';
 import { getStocks } from '@/lib/stock';
 import Gallery from '@/components/Gallery';
 import BuyBar from '@/components/BuyBar';
@@ -25,7 +25,6 @@ export default async function Home() {
   const ig = `https://instagram.com/${c.brand.instagram}`;
   const specsFilled = c.specs.some((s) => s.value.trim());
   const productFilled = !!(c.product.description || c.product.rules || c.product.maker);
-  const zones = [...new Set(c.shipping.options.map((o) => o.zone))];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -217,29 +216,25 @@ export default async function Home() {
           <Tempo n="VI" word="Con moto" />
           <h2>Envíos</h2>
           <p className="section-intro">{c.shipping.intro}</p>
-          <div className="shipping-table" role="table" aria-label="Costos de envío por Correo Argentino">
-            <div role="row" className="shipping-head">
-              <span role="columnheader">Zona</span>
-              <span role="columnheader">A domicilio</span>
-              <span role="columnheader">En sucursal</span>
-            </div>
-            {zones.map((z) => {
-              const cell = (m: 'domicilio' | 'sucursal') => {
-                const o = c.shipping.options.find((x) => x.zone === z && x.modality === m);
-                if (!o) return '—';
-                return o.price !== null ? formatARS(o.price) : 'A confirmar';
-              };
-              return (
-                <div role="row" key={z}>
-                  <span role="cell">{z}</span>
-                  <span role="cell" data-label={MODALITY_LABEL.domicilio}>{cell('domicilio')}</span>
-                  <span role="cell" data-label={MODALITY_LABEL.sucursal}>{cell('sucursal')}</span>
+          <details className="ship-details">
+            <summary>Ver el costo de envío por provincia</summary>
+            <div className="shipping-table" role="table" aria-label="Costo de envío por provincia">
+              <div role="row" className="shipping-head">
+                <span role="columnheader">Provincia</span>
+                <span role="columnheader">A domicilio</span>
+                <span role="columnheader">En sucursal</span>
+              </div>
+              {ratesOf(c).map((r) => (
+                <div role="row" key={r.province}>
+                  <span role="cell">{r.province}</span>
+                  <span role="cell" data-label={MODALITY_LABEL.domicilio}>{r.domicilio !== null ? formatARS(r.domicilio) : 'A confirmar'}</span>
+                  <span role="cell" data-label={MODALITY_LABEL.sucursal}>{r.sucursal !== null ? formatARS(r.sucursal) : 'A confirmar'}</span>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          </details>
           <p className="note">
-            Tarifas de Correo Argentino por envío{c.shipping.quotedAt ? `, vigentes al ${c.shipping.quotedAt}` : ''}. El costo del envío se suma al precio del mazo y se paga junto con él.
+            Envío por Correo Argentino{c.shipping.quotedAt ? `, precios vigentes al ${c.shipping.quotedAt}` : ''}. El costo del envío se suma al precio del producto y se paga en la misma transferencia.
           </p>
           <p>{c.shipping.dispatchInfo}</p>
         </section>
