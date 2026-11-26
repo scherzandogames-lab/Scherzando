@@ -405,3 +405,5 @@ section > * { max-width: var(--max); margin-left: auto; margin-right: auto; }
 .legal p { margin: 0; }
 .legal a { color: var(--oro-claro); }
 .regret-btn { display: inline-block; border: 1px solid var(--oro); color: var(--oro) !important; padding: 8px 14px; text-decoration: none; letter-spacing: .08em; text-transform: uppercase; font-size: .74rem; }
+
+@media (min-width: 700px) { .shipping-table > div.one, .shipping-head.one { grid-template-columns: 2fr 1fr !important; } }

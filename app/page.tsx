@@ -22,6 +22,7 @@ export default async function Home() {
   const av = await saleStatus(c);
   const stocks = await getStocks();
   const extras = productsOf(c).slice(1).filter((p) => p.price !== null);
+  const showDom = ratesOf(c).some((r) => r.domicilio !== null);
   const price = c.sale.price !== null ? formatARS(c.sale.price) : null;
   const ig = `https://instagram.com/${c.brand.instagram}`;
   const specsFilled = c.specs.some((s) => s.value.trim());
@@ -218,18 +219,18 @@ export default async function Home() {
           <h2>Envíos</h2>
           <p className="section-intro">{c.shipping.intro}</p>
           <details className="ship-details">
-            <summary>Ver el costo de envío por provincia</summary>
+            <summary>Ver el costo de envío a cada provincia</summary>
             <div className="shipping-table" role="table" aria-label="Costo de envío por provincia">
-              <div role="row" className="shipping-head">
+              <div role="row" className={`shipping-head${showDom ? '' : ' one'}`}>
                 <span role="columnheader">Provincia</span>
-                <span role="columnheader">A domicilio</span>
-                <span role="columnheader">En sucursal</span>
+                {showDom && <span role="columnheader">A domicilio</span>}
+                <span role="columnheader">Retiro en sucursal</span>
               </div>
               {ratesOf(c).map((r) => (
-                <div role="row" key={r.province}>
+                <div role="row" key={r.province} className={showDom ? undefined : 'one'}>
                   <span role="cell">{r.province}</span>
-                  <span role="cell" data-label={MODALITY_LABEL.domicilio}>{r.domicilio !== null ? formatARS(r.domicilio) : 'A confirmar'}</span>
-                  <span role="cell" data-label={MODALITY_LABEL.sucursal}>{r.sucursal !== null ? formatARS(r.sucursal) : 'A confirmar'}</span>
+                  {showDom && <span role="cell" data-label={MODALITY_LABEL.domicilio}>{r.domicilio !== null ? formatARS(r.domicilio) : '—'}</span>}
+                  <span role="cell" data-label={MODALITY_LABEL.sucursal}>{r.sucursal !== null ? formatARS(r.sucursal) : '—'}</span>
                 </div>
               ))}
             </div>
