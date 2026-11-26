@@ -46,10 +46,9 @@ components/               Piezas visuales
 supabase/schema.sql       Esquema de la base de datos
 ```
 
-## Publicación (importante)
+## Publicación
 
-Netlify (plan gratuito) sólo publica commits cuyo autor sea un miembro de su equipo.
-Con autorización del dueño, los commits van firmados como **Javier Weintraub <javierweintraub@gmail.com>**
-(`git -c user.name="Javier Weintraub" -c user.email="javierweintraub@gmail.com" commit ...`);
-si no, el deploy falla con «unrecognized Git contributor» y el sitio queda en la versión anterior.
+El repositorio es público para que Netlify (plan gratuito) publique automáticamente cada push a `main`.
+No subir nunca claves, contraseñas, datos bancarios ni datos de compradores: todo eso vive en las
+variables de entorno de Netlify y en la base de Supabase.
 Después de cada push, verificar en Netlify que el deploy quede «Published».
