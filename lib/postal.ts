@@ -13,7 +13,7 @@ import { PROVINCES } from './micorreo';
 const CP = table as Record<string, string>;
 const byCode = new Map(PROVINCES.map((p) => [p.code, p.name]));
 
-export function provincesForZip(zip: string): string[] {
+export function provincesForZip(zip: string, opts?: { infer?: boolean }): string[] {
   const z = zip.toUpperCase().replace(/\s/g, '');
   const m = z.match(/^([A-Z])?(\d{4})[A-Z]{0,3}$/);
   if (!m) return [];
@@ -21,8 +21,16 @@ export function provincesForZip(zip: string): string[] {
   if (letter && byCode.has(letter)) return [byCode.get(letter)!];
   const n = Number(digits);
   if (n >= 1000 && n <= 1499) return [byCode.get('C')!];
-  const codes = CP[digits];
+  const codes = CP[digits] ?? (opts?.infer ? neighborProvince(n) : undefined);
   return codes ? [...codes].map((c) => byCode.get(c)).filter((x): x is string => !!x) : [];
+}
+
+/** Código que no figura: si sus vecinos más cercanos (hasta 5 números) son todos de la misma provincia, es esa. */
+function neighborProvince(n: number): string | undefined {
+  const near: string[] = [];
+  for (let d = 1; d <= 5 && near.length < 4; d++) for (const k of [n - d, n + d]) if (CP[String(k)]) near.push(CP[String(k)]);
+  const provs = new Set(near.join(''));
+  return near.length && provs.size === 1 ? [...provs][0] : undefined;
 }
 
 
