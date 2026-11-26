@@ -1,5 +1,6 @@
 import table from './cp-provincias.json';
 import localities from './cp-localidades.json';
+import cabaCp from './caba-cp.json';
 import { PROVINCES } from './micorreo';
 
 /**
@@ -66,7 +67,10 @@ export function localitiesForZip(zip: string, province: string): { main: string 
   const m = zip.toUpperCase().replace(/\s/g, '').match(/^[A-Z]?(\d{4})[A-Z]{0,3}$/);
   if (!m) return { main: null, options: [] };
   const n = Number(m[1]);
-  if (n >= 1000 && n <= 1499) return { main: 'Ciudad Autónoma de Buenos Aires', options: ['Ciudad Autónoma de Buenos Aires'] };
+  if (n >= 1000 && n <= 1499) {
+    const c = cabaEntry(m[1]);
+    return c ? { main: c.b[0], options: c.b } : { main: 'Ciudad Autónoma de Buenos Aires', options: ['Ciudad Autónoma de Buenos Aires'] };
+  }
   const code = PROVINCES.find((p) => p.name === province)?.code;
   const entry = LOC[m[1]];
   const fix = (name: string) => MAJOR_BY_NORM.get(norm(name)) ?? accent(name);
@@ -74,4 +78,19 @@ export function localitiesForZip(zip: string, province: string): { main: string 
   const principal = code && entry?.m[code] ? fix(entry.m[code]) : null;
   const major = options.find((o) => MAJOR_BY_NORM.has(norm(o)));
   return { main: options.length === 1 ? options[0] : major ?? principal ?? null, options };
+}
+
+/**
+ * Capital Federal: código postal → barrios y punto aproximado.
+ * Armado con el servicio oficial de direcciones del Gobierno de la Ciudad (USIG), consultando direcciones
+ * repartidas por toda la Ciudad. b: barrios (el más frecuente primero); y/x: centro de las direcciones encontradas.
+ */
+type CabaEntry = { b: string[]; y: number; x: number };
+const CABA_CP = cabaCp as unknown as Record<string, CabaEntry>;
+export function cabaEntry(digits: string): CabaEntry | null {
+  if (CABA_CP[digits]) return CABA_CP[digits];
+  // Código sin datos: el más cercano en número (los códigos vecinos suelen ser de la misma zona), hasta 3 de distancia.
+  const n = Number(digits);
+  for (let d = 1; d <= 3; d++) for (const k of [n - d, n + d]) if (CABA_CP[String(k)]) return CABA_CP[String(k)];
+  return null;
 }

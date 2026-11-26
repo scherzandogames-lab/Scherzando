@@ -1,7 +1,7 @@
 import 'server-only';
 import coords from './cp-coords.json';
 import listado from './sucursales.json';
-import { accent } from './postal';
+import { accent, cabaEntry } from './postal';
 import { db, hasDb } from './supabase';
 import { agencies as fetchAgencies, micorreoEnabled, PROVINCES } from './micorreo';
 import { logEvent } from './log';
@@ -38,7 +38,10 @@ export function zipPoint(zip: string): [number, number] | null {
   const m = zip.toUpperCase().replace(/\s/g, '').match(/^[A-Z]?(\d{4})/);
   if (!m) return null;
   const n = Number(m[1]);
-  if (n >= 1000 && n <= 1499) return CABA;
+  if (n >= 1000 && n <= 1499) {
+    const c = cabaEntry(m[1]);
+    return c ? [c.y, c.x] : CABA;
+  }
   return COORDS[m[1]] ?? null;
 }
 
