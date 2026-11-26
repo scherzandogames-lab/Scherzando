@@ -1,0 +1,80 @@
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { isAdmin } from '@/lib/auth';
+import { getContent } from '@/lib/settings';
+import { micorreoEnabled } from '@/lib/micorreo';
+import AdminNav from '@/components/admin/AdminNav';
+import { saveStore } from '../actions';
+
+export const dynamic = 'force-dynamic';
+export const metadata: Metadata = { title: 'Tienda · SCHERZANDO', robots: { index: false } };
+
+export default async function Tienda({ searchParams }: { searchParams: Promise<{ ok?: string }> }) {
+  if (!(await isAdmin())) redirect('/admin');
+  const { ok } = await searchParams;
+  const c = await getContent();
+  const rows = [...c.shipping.options, ...Array(Math.max(0, 8 - c.shipping.options.length)).fill(null)].slice(0, 8);
+  const p = c.shipping.pkg;
+
+  return (
+    <main className="adm">
+      <AdminNav on="tienda" />
+      <form action={saveStore} className="adm-wrap adm-form">
+        <h1>Pagos y envíos</h1>
+        {ok && <p className="okmsg">Cambios guardados y publicados.</p>}
+
+        <p className="muted">El precio y el stock de cada producto se cambian en <a href="/admin/productos">Productos</a>.</p>
+
+        <h2>Datos para la transferencia</h2>
+        <p className="muted">Se le muestran al comprador al comprar y se le envían por correo.</p>
+        <div className="adm-grid">
+          <label className="f">Titular de la cuenta<input name="pay_holder" defaultValue={c.payment.holder} /></label>
+          <label className="f">Banco<input name="pay_bank" defaultValue={c.payment.bank} /></label>
+          <label className="f">CBU o CVU<input name="pay_cbu" inputMode="numeric" defaultValue={c.payment.cbu} /></label>
+          <label className="f">Alias<input name="pay_alias" defaultValue={c.payment.alias} /></label>
+          <label className="f">CUIT o CUIL del titular<input name="pay_cuit" defaultValue={c.payment.cuit} /></label>
+          <label className="f">Dónde mandan el comprobante<input name="pay_proof" defaultValue={c.payment.proofContact} placeholder="Correo o WhatsApp" /></label>
+          <label className="f">Horas de reserva sin pago<input name="pay_hold" inputMode="numeric" defaultValue={c.payment.holdHours} /><small>Pasado ese plazo, el pedido se cancela y el stock vuelve.</small></label>
+        </div>
+
+        <h2>Tarifas de envío de Correo Argentino</h2>
+        <p className="muted">
+          {micorreoEnabled()
+            ? 'La cotización automática de MiCorreo está activa: estos importes sólo se usan si Correo Argentino no responde.'
+            : 'Cotizá en MiCorreo el paquete con un mazo y cargá acá el importe de cada opción. Zona «CABA y GBA» = códigos postales 1000 a 1893; el sistema le muestra a cada comprador sólo las opciones de su zona.'}
+        </p>
+        <div className="adm-table">
+          <div className="adm-row head"><span>Nombre de la zona</span><span>Códigos postales</span><span>Modalidad</span><span>Importe ($)</span></div>
+          {rows.map((o, i) => (
+            <div className="adm-row" key={i}>
+              <input name={`opt_${i}_zone`} defaultValue={o?.zone ?? ''} placeholder="(vacío = sin usar)" aria-label="Zona" />
+              <select name={`opt_${i}_region`} defaultValue={o?.region ?? 'interior'} aria-label="Códigos postales">
+                <option value="amba">CABA y GBA</option>
+                <option value="interior">Resto del país</option>
+                <option value="todo">Todo el país</option>
+              </select>
+              <select name={`opt_${i}_modality`} defaultValue={o?.modality ?? 'domicilio'} aria-label="Modalidad">
+                <option value="domicilio">A domicilio</option>
+                <option value="sucursal">Retiro en sucursal</option>
+              </select>
+              <input name={`opt_${i}_price`} inputMode="numeric" defaultValue={o?.price ?? ''} placeholder="a confirmar" aria-label="Importe" />
+            </div>
+          ))}
+        </div>
+        <label className="f narrow">Fecha de la cotización (se muestra en la página)<input name="quotedAt" defaultValue={c.shipping.quotedAt} placeholder="Ej. 1 de diciembre de 2026" /></label>
+
+        <h2>Paquete y origen</h2>
+        <p className="muted">Necesarios para la cotización automática y para cargar envíos en MiCorreo.</p>
+        <div className="adm-grid">
+          <label className="f">Código postal de despacho<input name="originZip" inputMode="numeric" defaultValue={p.originZip} /></label>
+          <label className="f">Peso de un mazo embalado (gramos)<input name="weightG" inputMode="numeric" defaultValue={p.weightG ?? ''} /></label>
+          <label className="f">Alto (cm)<input name="heightCm" inputMode="numeric" defaultValue={p.heightCm ?? ''} /></label>
+          <label className="f">Ancho (cm)<input name="widthCm" inputMode="numeric" defaultValue={p.widthCm ?? ''} /></label>
+          <label className="f">Largo (cm)<input name="lengthCm" inputMode="numeric" defaultValue={p.lengthCm ?? ''} /></label>
+        </div>
+
+        <div className="adm-save"><button className="btn btn-gold" type="submit">Guardar y publicar</button></div>
+      </form>
+    </main>
+  );
+}
