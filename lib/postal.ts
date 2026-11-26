@@ -25,7 +25,7 @@ export function provincesForZip(zip: string): string[] {
 }
 
 
-const LOC = localities as unknown as Record<string, [string, string][]>;
+const LOC = localities as unknown as Record<string, { o: [string, string][]; m: Record<string, string> }>;
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 
 /** Ciudades principales (capitales y ciudades grandes), con su nombre bien escrito. */
@@ -42,6 +42,22 @@ const MAJOR = [
 ];
 const MAJOR_BY_NORM = new Map(MAJOR.map((n) => [norm(n), n]));
 
+/** Tildes de palabras frecuentes en nombres de localidades (la base pública no las trae). */
+const ACCENTS: Record<string, string> = Object.fromEntries(
+  ('Río Jesús José María Martín Rodríguez Luján Junín Ramón Nicolás Bahía Córdoba Neuquén Tucumán García Pérez González López ' +
+    'Fernández Martínez Mejía Perón Colón Concepción Asunción Encarnación Sebastián Tomás Andrés Ángel Joaquín Agustín Fermín Inés ' +
+    'Lucía Hernández Sánchez Gómez Díaz Álvarez Gutiérrez Domínguez Ibáñez Jiménez Muñiz Núñez Ortíz Ruíz Suárez Vázquez Benítez ' +
+    'Ezeiza Moreno Campaña Paraná Uruguay Güemes Rincón Unión Pirámide Estación Cañada Cañuelas Bolívar Lomas Florencio Varela ' +
+    'Echeverría Cabaña Montaña Laguna Médanos Ciénaga Ciénega Peñas Peñón Isidro Boulogne Pilar Chacabuco Belén Jáchal Andalgalá Tinogasta ' +
+    'Famaillá Simoca Tafí Cafayate Orán Tartagal Rosario Federación Concordia Victoria Diamante Nogoyá Gualeguay Villaguay Corrientes ' +
+    'Itatí Mburucuyá Goya Posadas Oberá Eldorado Iguazú Apóstoles Resistencia Charata Formosa Clorinda Pirané Santiago Añatuya Frías ' +
+    'Termas Bandera Quimilí Catamarca Valle Rioja Chilecito Chamical Mendoza Maipú Luján Tunuyán Malargüe Uspallata Neuquén Zapala ' +
+    'Cutral Plottier Senillosa Viedma Cipolletti Allen Regina Bariloche Bolsón Trelew Rawson Esquel Gaiman Madryn Sarmiento Comodoro ' +
+    'Gallegos Calafate Chaltén Ushuaia Tolhuin Pampa Realicó Toay Macachín Victorica Mercedes Merlo Juárez Carhué Darregueira Ayacucho Maipú')
+    .split(' ').filter((w) => /[áéíóúñüÁÉÍÓÚÑÜ]/.test(w)).map((w) => [norm(w), w]),
+);
+const accent = (name: string) => name.split(' ').map((w) => ACCENTS[norm(w)] ?? w).join(' ');
+
 /**
  * Localidades de un código postal en una provincia.
  * main: la que se completa sola (si hay una sola, o si una es ciudad principal); options: todas, para elegir.
@@ -52,8 +68,10 @@ export function localitiesForZip(zip: string, province: string): { main: string 
   const n = Number(m[1]);
   if (n >= 1000 && n <= 1499) return { main: 'Ciudad Autónoma de Buenos Aires', options: ['Ciudad Autónoma de Buenos Aires'] };
   const code = PROVINCES.find((p) => p.name === province)?.code;
-  const list = (LOC[m[1]] ?? []).filter(([, c]) => !code || c === code).map(([name]) => MAJOR_BY_NORM.get(norm(name)) ?? name);
-  const options = [...new Set(list)];
+  const entry = LOC[m[1]];
+  const fix = (name: string) => MAJOR_BY_NORM.get(norm(name)) ?? accent(name);
+  const options = [...new Set((entry?.o ?? []).filter(([, c]) => !code || c === code).map(([name]) => fix(name)))];
+  const principal = code && entry?.m[code] ? fix(entry.m[code]) : null;
   const major = options.find((o) => MAJOR_BY_NORM.has(norm(o)));
-  return { main: options.length === 1 ? options[0] : major ?? null, options };
+  return { main: options.length === 1 ? options[0] : major ?? principal ?? null, options };
 }
