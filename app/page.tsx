@@ -8,6 +8,7 @@ import Gallery from '@/components/Gallery';
 import BuyBar from '@/components/BuyBar';
 import BuyBox from '@/components/BuyBox';
 import Share from '@/components/Share';
+import LegalFooter from '@/components/LegalFooter';
 
 export const dynamic = 'force-dynamic';
 
@@ -271,6 +272,7 @@ export default async function Home() {
         <p className="footer-brand">{c.brand.name}</p>
         <a href={ig} target="_blank" rel="noopener noreferrer" className="footer-ig">@{c.brand.instagram} en Instagram</a>
         <Share url={site} text="SCHERZANDO.AR · Una baraja española, pero de música clásica." />
+        <LegalFooter c={c} />
       </footer>
 
       <BuyBar label="Comprar" price={price} />

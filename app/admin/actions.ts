@@ -64,6 +64,7 @@ export async function saveStore(form: FormData) {
     }
     return {
       ...c,
+      seller: { name: s(form, 'seller_name', 160), cuit: s(form, 'seller_cuit', 20), address: s(form, 'seller_address', 200), email: s(form, 'seller_email', 160) },
       payment: {
         holder: s(form, 'pay_holder', 120),
         bank: s(form, 'pay_bank', 80),

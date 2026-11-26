@@ -6,6 +6,7 @@ import { formatARS, productById, photoSize } from '@/lib/content';
 import { PROVINCES } from '@/lib/micorreo';
 import CheckoutForm from '@/components/CheckoutForm';
 import SimpleHeader from '@/components/SimpleHeader';
+import LegalFooter from '@/components/LegalFooter';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Comprar · SCHERZANDO.AR', alternates: { canonical: '/comprar' } };
@@ -51,6 +52,7 @@ export default async function Comprar({ searchParams }: SP) {
           </section>
         </div>
       </main>
+      <footer className="footer"><LegalFooter c={c} /></footer>
     </>
   );
 }

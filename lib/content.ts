@@ -36,6 +36,8 @@ export type Product = { id: string; name: string; unit: [string, string]; descri
 export type SiteContent = {
   photos: { hero: string; box: string; gallery: GalleryItem[] };
   brand: { name: string; instagram: string };
+  /** Datos del vendedor que exige la ley de Defensa del Consumidor (se muestran al pie). */
+  seller: { name: string; cuit: string; address: string; email: string };
   hero: { eyebrow: string; title: string; tagline: string; cta: string };
   taglineOptions: string[];
   universe: { title: string; paragraphs: string[] };
@@ -100,6 +102,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     gallery: GALLERY.map((g) => ({ src: g.photo.src, alt: g.photo.alt, caption: g.caption })),
   },
   brand: { name: 'SCHERZANDO.AR', instagram: 'scherzando.ar' },
+  seller: { name: '', cuit: '', address: '', email: 'scherzandogames@gmail.com' },
   hero: {
     eyebrow: 'Una baraja española',
     title: 'Pero de música clásica',
@@ -206,6 +209,7 @@ export function mergeContent(saved: Partial<SiteContent> | null | undefined): Si
       gallery: Array.isArray(saved.photos?.gallery) && saved.photos!.gallery.length ? saved.photos!.gallery : d.photos.gallery,
     },
     brand: obj(d.brand, saved.brand),
+    seller: obj(d.seller, saved.seller),
     hero: obj(d.hero, saved.hero),
     taglineOptions: Array.isArray(saved.taglineOptions) ? saved.taglineOptions : d.taglineOptions,
     universe: obj(d.universe, saved.universe),

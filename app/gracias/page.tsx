@@ -5,6 +5,7 @@ import { getOrderByAccess, addressLine, orderRef, transferRows, type Order } fro
 import type { SiteContent } from '@/lib/content';
 import CopyButton from '@/components/CopyButton';
 import SimpleHeader from '@/components/SimpleHeader';
+import LegalFooter from '@/components/LegalFooter';
 import PurchaseTracker from '@/components/PurchaseTracker';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +22,7 @@ export default async function Gracias({ searchParams }: SP) {
     <>
       <SimpleHeader name={c.brand.name} />
       <main className="page status">{order ? <State o={order} c={c} /> : <NotFound />}</main>
+      <footer className="footer"><LegalFooter c={c} /></footer>
     </>
   );
 }

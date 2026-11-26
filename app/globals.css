@@ -399,3 +399,9 @@ section > * { max-width: var(--max); margin-left: auto; margin-right: auto; }
 .adm-row.prov > span { font-size: .92rem; }
 .ship-details { margin: 20px 0 12px; }
 .ship-details summary { cursor: pointer; font-family: var(--sans); font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bordo); padding: 12px 0; }
+
+/* Datos legales y botón de arrepentimiento */
+.legal { max-width: 640px; display: grid; gap: 8px; justify-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(232, 169, 58, .25); font-family: var(--sans); font-size: .8rem; color: var(--rosa); }
+.legal p { margin: 0; }
+.legal a { color: var(--oro-claro); }
+.regret-btn { display: inline-block; border: 1px solid var(--oro); color: var(--oro) !important; padding: 8px 14px; text-decoration: none; letter-spacing: .08em; text-transform: uppercase; font-size: .74rem; }

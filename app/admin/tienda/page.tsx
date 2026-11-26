@@ -25,6 +25,15 @@ export default async function Tienda({ searchParams }: { searchParams: Promise<{
 
         <p className="muted">El precio y el stock de cada producto se cambian en <a href="/admin/productos">Productos</a>.</p>
 
+        <h2>Datos del vendedor</h2>
+        <p className="muted">Los exige la ley de Defensa del Consumidor. Se muestran al pie de la página, junto al botón de arrepentimiento.</p>
+        <div className="adm-grid">
+          <label className="f">Nombre o razón social<input name="seller_name" defaultValue={c.seller.name} /></label>
+          <label className="f">CUIT<input name="seller_cuit" defaultValue={c.seller.cuit} placeholder="Ej. 27-12345678-9" /></label>
+          <label className="f">Domicilio (opcional)<input name="seller_address" defaultValue={c.seller.address} /></label>
+          <label className="f">Correo de contacto<input name="seller_email" type="email" defaultValue={c.seller.email} /></label>
+        </div>
+
         <h2>Datos para la transferencia</h2>
         <p className="muted">Se le muestran al comprador al comprar y se le envían por correo.</p>
         <div className="adm-grid">
