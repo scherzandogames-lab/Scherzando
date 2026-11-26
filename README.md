@@ -40,3 +40,4 @@ Sin variables de entorno la página funciona con los textos iniciales y la compr
 ## Créditos
 
 Tabla de códigos postales por provincia (`lib/cp-provincias.json`): GeoNames (https://www.geonames.org), licencia CC BY 4.0.
+Tabla de localidades por código postal (`lib/cp-localidades.json`): GeoNames, CC BY 4.0.

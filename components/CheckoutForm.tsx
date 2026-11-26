@@ -13,6 +13,9 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
   const [zip, setZip] = useState('');
   const [province, setProvince] = useState('');
   const [zipProvinces, setZipProvinces] = useState<string[] | null>(null);
+  const [city, setCity] = useState('');
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+  const [cityTouched, setCityTouched] = useState(false);
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
   const [quoteErr, setQuoteErr] = useState('');
   const [loadingQ, setLoadingQ] = useState(false);
@@ -41,6 +44,23 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
       .catch(() => {});
     return () => ctrl.abort();
   }, [zip]);
+
+  // Con código postal y provincia, se sugiere la localidad (y se completa sola si es clara).
+  useEffect(() => {
+    if (!/^[A-Za-z]?\d{4}[A-Za-z]{0,3}$/.test(zip.trim()) || !province) {
+      setCityOptions([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    fetch(`/api/envio/provincia?cp=${encodeURIComponent(zip.trim())}&provincia=${encodeURIComponent(province)}`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((j: { localities: { main: string | null; options: string[] } }) => {
+        setCityOptions(j.localities.options);
+        if (j.localities.main && !cityTouched) setCity(j.localities.main);
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [zip, province, cityTouched]);
 
   // Cotiza el envío cuando el código postal está completo (y al cambiar la cantidad).
   useEffect(() => {
@@ -157,7 +177,7 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
             <label className="f">Calle<input id="street" name="street" required autoComplete="address-line1" maxLength={120} /></label>
             <label className="f">Número<input id="number" name="number" required inputMode="numeric" maxLength={20} /></label>
             <label className="f">Piso y depto. (opcional)<input id="floor" name="floor" autoComplete="address-line2" maxLength={40} /></label>
-            <label className="f">Localidad<input id="city" name="city" required autoComplete="address-level2" maxLength={80} /></label>
+            <label className="f">Localidad<input id="city" name="city" required autoComplete="address-level2" maxLength={80} list="localidades" value={city} onChange={(e) => { setCity(e.target.value); setCityTouched(true); }} /></label>
             <label className="f wide">Indicaciones para la entrega (opcional)<textarea id="notes" name="notes" rows={2} maxLength={300} /></label>
           </div>
         )}
@@ -167,7 +187,12 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
               Indicá en qué ciudad y en qué sucursal de Correo Argentino querés retirar tu pedido. Podés buscarla en el{' '}
               <a href="https://www.correoargentino.com.ar/formularios/sucursales" target="_blank" rel="noopener noreferrer">buscador de sucursales de Correo Argentino</a>.
             </p>
-            <label className="f">Ciudad o localidad<input id="city" name="city" required autoComplete="address-level2" maxLength={80} placeholder="Ej. Mar del Plata" /></label>
+            <label className="f">Ciudad o localidad
+              <input id="city" name="city" required autoComplete="address-level2" maxLength={80} placeholder="Ej. Mar del Plata"
+                list="localidades" value={city} onChange={(e) => { setCity(e.target.value); setCityTouched(true); }} />
+              <datalist id="localidades">{cityOptions.map((o) => <option key={o} value={o} />)}</datalist>
+              {cityOptions.length > 1 && <small>Tocá el campo para ver las localidades de tu código postal.</small>}
+            </label>
             {agencies && agencies.length > 0 ? (
               <label className="f">Sucursal de retiro
                 <select id="agency_code" name="agency_code" required defaultValue="">
