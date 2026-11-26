@@ -87,7 +87,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
                 <dt>Teléfono</dt><dd><span className="sel">{o.phone}</span></dd>
                 <dt>Producto</dt><dd>{o.product_name ?? 'Mazo'}: {o.quantity} × {formatARS(o.unit_price)} = {formatARS(o.items_total)}</dd>
                 <dt>Envío</dt><dd>{o.shipping_label} · {formatARS(o.shipping_cost)} <small>({o.shipping_source === 'micorreo' ? 'cotizado en línea' : 'tabla del panel'})</small></dd>
-                <dt>Entrega</dt><dd>{addressLine(o)}{o.address.notes ? <><br /><em>{o.address.notes}</em></> : null}</dd>
+                <dt>Entrega</dt><dd><strong>{addressLine(o)}</strong>{o.address.notes ? <><br /><em>{o.address.notes}</em></> : null}</dd>
                 <dt>Total</dt><dd><b>{formatARS(o.total)}</b></dd>
                 <dt>Pago</dt><dd>{STATUS[o.status]}{o.paid_at ? ` · ${fmt(o.paid_at)}` : ''}{o.status === 'pendiente' && o.reserved_until ? ` · reservado hasta ${fmt(o.reserved_until)}` : ''}</dd>
                 <dt>Correos</dt><dd>{o.emails_log?.length ? o.emails_log.map((e, i) => <div key={i}>{fmt(e.at)} · {e.kind} → {e.to} {e.ok ? '✓' : `✗ ${e.error ?? ''}`}</div>) : '—'}</dd>

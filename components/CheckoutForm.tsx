@@ -142,7 +142,11 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
         )}
         {selected?.modality === 'sucursal' && (
           <div className="fields two">
-            <label className="f">Localidad<input id="city" name="city" required autoComplete="address-level2" maxLength={80} /></label>
+            <p className="f wide muted small">
+              Indicá en qué ciudad y en qué sucursal de Correo Argentino querés retirar tu pedido. Podés buscarla en el{' '}
+              <a href="https://www.correoargentino.com.ar/formularios/sucursales" target="_blank" rel="noopener noreferrer">buscador de sucursales de Correo Argentino</a>.
+            </p>
+            <label className="f">Ciudad o localidad<input id="city" name="city" required autoComplete="address-level2" maxLength={80} placeholder="Ej. Mar del Plata" /></label>
             {agencies && agencies.length > 0 ? (
               <label className="f">Sucursal de retiro
                 <select id="agency_code" name="agency_code" required defaultValue="">
@@ -151,8 +155,9 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
                 </select>
               </label>
             ) : (
-              <label className="f">Sucursal donde querés retirar<input id="agency_note" name="agency_note" required maxLength={200} placeholder="Dirección o nombre de la sucursal" /></label>
+              <label className="f">Sucursal de Correo Argentino<input id="agency_note" name="agency_note" required maxLength={200} placeholder="Ej. Sucursal Centro, Av. Luro 2460" /><small>Nombre o dirección de la sucursal.</small></label>
             )}
+            <label className="f wide">Detalles o aclaraciones del envío (opcional)<textarea id="notes" name="notes" rows={2} maxLength={300} placeholder="Ej. Si esa sucursal no está disponible, cualquier otra de Mar del Plata" /></label>
           </div>
         )}
       </fieldset>
