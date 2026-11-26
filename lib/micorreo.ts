@@ -11,8 +11,11 @@ import { env } from './env';
  * inactivo y la tienda usa la tabla de tarifas cargada en el panel. Nunca se simulan respuestas.
  */
 
+// MICORREO_API_BASE sólo sirve para pruebas locales con un servidor simulado: se ignora salvo que apunte a localhost.
+const localOverride = (u: string | undefined) => (u && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/.test(u) ? u.replace(/\/$/, '') : '');
 const BASE = () =>
-  env.micorreo().prod ? 'https://api.correoargentino.com.ar/micorreo/v1' : 'https://apitest.correoargentino.com.ar/micorreo/v1';
+  localOverride(process.env.MICORREO_API_BASE) ||
+  (env.micorreo().prod ? 'https://api.correoargentino.com.ar/micorreo/v1' : 'https://apitest.correoargentino.com.ar/micorreo/v1');
 
 export function micorreoEnabled() {
   const c = env.micorreo();
@@ -73,10 +76,16 @@ export async function quote(opts: {
   });
 }
 
+type DayHours = { start: string; end: string } | null;
 export type Agency = {
   code: string;
   name: string;
-  location: { address: { streetName: string; streetNumber: string; city: string; locality?: string; province: string; postalCode: string } };
+  location: {
+    address: { streetName: string; streetNumber: string; city: string; locality?: string; province: string; provinceCode?: string; postalCode: string };
+    latitude?: string;
+    longitude?: string;
+  };
+  hours?: Record<'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'holidays', DayHours>;
   services?: { packageReception?: boolean; pickupAvailability?: boolean };
   status?: string;
 };

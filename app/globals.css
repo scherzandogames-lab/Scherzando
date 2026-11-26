@@ -409,3 +409,16 @@ section > * { max-width: var(--max); margin-left: auto; margin-right: auto; }
 @media (min-width: 700px) { .shipping-table > div.one, .shipping-head.one { grid-template-columns: 2fr 1fr !important; } }
 
 .adm-row.prov { grid-template-columns: 1.6fr 1fr; }
+
+/* Sucursales de Correo Argentino en el checkout */
+.branches { grid-column: 1 / -1; display: grid; gap: 12px; min-width: 0; }
+.branches-title { font-family: var(--sans); font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--bordo); margin: 8px 0 0; }
+.branches-search { display: grid; gap: 8px; grid-template-columns: 1fr; align-items: end; }
+@media (min-width: 560px) { .branches-search { grid-template-columns: 1fr 1.4fr auto; } }
+.branch-list { display: grid; gap: 10px; }
+.branch { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--rosa-hondo); background: #fffdf8; border-radius: 2px; }
+@media (min-width: 560px) { .branch { grid-template-columns: 1fr auto; align-items: center; } }
+.branch p { margin: 0; overflow-wrap: anywhere; }
+.branch-name { font-size: 1.2rem; color: var(--bordo); }
+.branch .btn { min-height: 44px; padding: 10px 16px; font-size: .74rem; }
+.branch.chosen { border-color: var(--bordo); box-shadow: inset 0 0 0 1px var(--bordo); background: #fff; }

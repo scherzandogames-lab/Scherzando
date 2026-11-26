@@ -11,6 +11,8 @@ import { shippingOptionsFor, ShippingError } from './shipping';
 import { logEvent } from './log';
 import { PROVINCES } from './micorreo';
 import { provincesForZip } from './postal';
+import { verifiedBranch } from './branches';
+import { micorreoEnabled } from './micorreo';
 
 export type Address = {
   street: string;
@@ -135,7 +137,17 @@ export async function startCheckout(input: Record<string, unknown>) {
     notes: clean(input.notes, 300),
     agency_note: clean(input.agency_note, 200),
   };
-  const agency_code = clean(input.agency_code, 20) || null;
+  let agency_code = clean(input.agency_code, 20) || null;
+  // Con la lista oficial de Correo Argentino activa, sólo se acepta una sucursal verificada en esa lista.
+  if (ship.modality === 'sucursal' && micorreoEnabled()) {
+    if (!agency_code) throw new CheckoutError('Elegí la sucursal de Correo Argentino donde querés retirar.');
+    const b = await verifiedBranch(province, agency_code);
+    if (!b) throw new CheckoutError('No pudimos verificar esa sucursal. Volvé a buscar y elegí una de la lista.');
+    agency_code = b.code;
+    address.agency_note = `${b.name} — ${b.street}, ${b.locality}${b.postalCode ? ` (CP ${b.postalCode})` : ''}`;
+  } else {
+    agency_code = null; // sin lista oficial, la sucursal es la que escribió el comprador
+  }
   if (ship.modality === 'domicilio' && (!address.street || !address.number || !address.city))
     throw new CheckoutError('Completá la dirección de entrega.');
   if (ship.modality === 'sucursal' && !address.city) throw new CheckoutError('Completá tu localidad.');
@@ -228,7 +240,7 @@ async function logEmail(orderId: string, entry: Order['emails_log'][number]) {
 export function addressLine(o: Order) {
   const a = o.address;
   if (o.shipping_label.includes('sucursal'))
-    return `Retiro en sucursal${o.agency_code ? ` ${o.agency_code}` : ''}${a.agency_note ? `: ${a.agency_note}` : ''} — ${a.city}, ${a.province} (CP ${a.zip})`;
+    return `Retiro en sucursal${a.agency_note ? `: ${a.agency_note}` : ''}${o.agency_code ? ` [código ${o.agency_code}]` : ''} — ${a.city}, ${a.province} (CP ${a.zip})`;
   return `${a.street} ${a.number}${a.floor ? ', ' + a.floor : ''} — ${a.city}, ${a.province} (CP ${a.zip})`;
 }
 

@@ -123,3 +123,24 @@ grant execute on function public.liberar_stock(uuid) to service_role;
 
 -- Depósito público para las fotografías que se suban desde el panel.
 insert into storage.buckets (id, name, public) values ('publico', 'publico', true) on conflict (id) do nothing;
+
+-- Copia local de las sucursales oficiales de Correo Argentino (API MiCorreo /agencies).
+-- Se renueva cada 24 horas por provincia; sólo se muestran sucursales que vienen de la API oficial.
+create table if not exists public.agencies (
+  code          text primary key,          -- código oficial de la sucursal (p. ej. B0107)
+  province_code text not null,
+  name          text not null,
+  street        text,
+  locality      text,
+  city          text,
+  postal_code   text,
+  lat           double precision,
+  lng           double precision,
+  hours         jsonb,                     -- horarios tal como los informa Correo Argentino
+  pickup        boolean not null default true,
+  synced_at     timestamptz not null default now()
+);
+create index if not exists agencies_province_idx on public.agencies (province_code);
+alter table public.agencies enable row level security;
+revoke all on public.agencies from anon, authenticated;
+grant select, insert, update, delete on public.agencies to service_role;

@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { track } from './MetaPixel';
+import BranchPicker from './BranchPicker';
 
 type Quote = { id: string; label: string; modality: 'domicilio' | 'sucursal'; cost: number; source: string };
-type Agency = { code: string; name: string; address: string };
 
 const ars = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
@@ -16,11 +16,11 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
   const [city, setCity] = useState('');
   const [cityOptions, setCityOptions] = useState<string[]>([]);
   const [cityTouched, setCityTouched] = useState(false);
+  const [cityOther, setCityOther] = useState(false);
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
   const [quoteErr, setQuoteErr] = useState('');
   const [loadingQ, setLoadingQ] = useState(false);
   const [ship, setShip] = useState('');
-  const [agencies, setAgencies] = useState<Agency[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -89,15 +89,6 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
     return () => ctrl.abort();
   }, [zip, qty, province]);
 
-  // Lista oficial de sucursales (sólo si la integración con MiCorreo está activa).
-  useEffect(() => {
-    if (selected?.modality !== 'sucursal' || !province) return;
-    setAgencies(null);
-    fetch(`/api/envio/sucursales?provincia=${encodeURIComponent(province)}`)
-      .then((r) => r.json())
-      .then((j) => setAgencies(j.enabled ? j.agencies : []))
-      .catch(() => setAgencies([]));
-  }, [selected?.modality, province]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -183,27 +174,24 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
         )}
         {selected?.modality === 'sucursal' && (
           <div className="fields two">
-            <p className="f wide muted small">
-              Indicá en qué ciudad y en qué sucursal de Correo Argentino querés retirar tu pedido. Podés buscarla en el{' '}
-              <a href="https://www.correoargentino.com.ar/formularios/sucursales" target="_blank" rel="noopener noreferrer">buscador de sucursales de Correo Argentino</a>.
-            </p>
-            <label className="f">Ciudad o localidad
-              <input id="city" name="city" required autoComplete="address-level2" maxLength={80} placeholder="Ej. Mar del Plata"
-                list="localidades" value={city} onChange={(e) => { setCity(e.target.value); setCityTouched(true); }} />
-              <datalist id="localidades">{cityOptions.map((o) => <option key={o} value={o} />)}</datalist>
-              {cityOptions.length > 1 && <small>Tocá el campo para ver las localidades de tu código postal.</small>}
-            </label>
-            {agencies && agencies.length > 0 ? (
-              <label className="f">Sucursal de retiro
-                <select id="agency_code" name="agency_code" required defaultValue="">
-                  <option value="" disabled>Elegí una sucursal</option>
-                  {agencies.map((a) => <option key={a.code} value={a.code}>{a.name} — {a.address}</option>)}
+            {cityOptions.length > 1 && !cityOther ? (
+              <label className="f">Ciudad o localidad
+                <select id="city" name="city" required value={cityOptions.includes(city) ? city : ''}
+                  onChange={(e) => { if (e.target.value === '__otra') { setCityOther(true); setCity(''); } else setCity(e.target.value); setCityTouched(true); }}>
+                  <option value="" disabled>Elegí tu localidad</option>
+                  {cityOptions.map((o) => <option key={o} value={o}>{o}</option>)}
+                  <option value="__otra">Otra localidad…</option>
                 </select>
+                <small>Localidades de tu código postal.</small>
               </label>
             ) : (
-              <label className="f">Sucursal de Correo Argentino<input id="agency_note" name="agency_note" required maxLength={200} placeholder="Ej. Sucursal Centro, Av. Luro 2460" /><small>Nombre o dirección de la sucursal.</small></label>
+              <label className="f">Ciudad o localidad
+                <input id="city" name="city" required autoComplete="address-level2" maxLength={80} placeholder="Ej. Mar del Plata"
+                  value={city} onChange={(e) => { setCity(e.target.value); setCityTouched(true); }} />
+              </label>
             )}
-            <label className="f wide">Detalles o aclaraciones del envío (opcional)<textarea id="notes" name="notes" rows={2} maxLength={300} placeholder="Ej. Si esa sucursal no está disponible, cualquier otra de Mar del Plata" /></label>
+            <BranchPicker province={province} zip={zip.trim()} locality={city} />
+            <label className="f wide">Detalles o aclaraciones del envío (opcional)<textarea id="notes" name="notes" rows={2} maxLength={300} placeholder="Ej. Si esa sucursal no está disponible, cualquier otra de mi localidad" /></label>
           </div>
         )}
       </fieldset>
