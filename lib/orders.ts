@@ -10,6 +10,7 @@ import { getStock, releaseExpired } from './stock';
 import { shippingOptionsFor, ShippingError } from './shipping';
 import { logEvent } from './log';
 import { PROVINCES } from './micorreo';
+import { provincesForZip } from './postal';
 
 export type Address = {
   street: string;
@@ -110,6 +111,9 @@ export async function startCheckout(input: Record<string, unknown>) {
   if (!zipNumber(zip)) throw new CheckoutError('Revisá el código postal (por ejemplo 1425).');
   const province = clean(input.province, 60);
   if (!PROVINCES.some((p) => p.name === province)) throw new CheckoutError('Elegí la provincia.');
+  const zipProvinces = provincesForZip(zip);
+  if (zipProvinces.length && !zipProvinces.includes(province))
+    throw new CheckoutError(`El código postal ${zip} corresponde a ${zipProvinces.join(' o ')}. Revisá el código postal o la provincia.`);
 
   let quotes;
   try {

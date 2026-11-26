@@ -50,15 +50,14 @@ export default async function Tienda({ searchParams }: { searchParams: Promise<{
         <p className="muted">
           {micorreoEnabled()
             ? 'La cotización automática de MiCorreo está activa: estos importes sólo se usan si Correo Argentino no responde.'
-            : 'Cargá el precio de envío de cada provincia. Si dejás una casilla vacía, esa opción no se ofrece; si una provincia no tiene ningún precio, sus compradores no pueden comprar.'}
+            : 'Cargá el precio de retiro en sucursal de cada provincia. Si una provincia no tiene precio, sus compradores no pueden comprar. El envío a domicilio se habilita cuando lleguen las credenciales de Correo Argentino.'}
         </p>
         <div className="adm-table">
-          <div className="adm-row prov head"><span>Provincia</span><span>A domicilio ($)</span><span>Retiro en sucursal ($)</span></div>
+          <div className="adm-row prov head"><span>Provincia</span><span>Retiro en sucursal ($)</span></div>
           {ratesOf(c).map((r, i) => (
             <div className="adm-row prov" key={r.province}>
               <input type="hidden" name={`rate_${i}_province`} value={r.province} />
               <span>{r.province}</span>
-              <input name={`rate_${i}_domicilio`} inputMode="numeric" defaultValue={r.domicilio ?? ''} placeholder="sin cargar" aria-label={`${r.province}, a domicilio`} />
               <input name={`rate_${i}_sucursal`} inputMode="numeric" defaultValue={r.sucursal ?? ''} placeholder="sin cargar" aria-label={`${r.province}, en sucursal`} />
             </div>
           ))}

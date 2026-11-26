@@ -12,6 +12,7 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
   const [qty, setQty] = useState(Math.min(props.max, Math.max(1, props.initialQty)));
   const [zip, setZip] = useState('');
   const [province, setProvince] = useState('');
+  const [zipProvinces, setZipProvinces] = useState<string[] | null>(null);
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
   const [quoteErr, setQuoteErr] = useState('');
   const [loadingQ, setLoadingQ] = useState(false);
@@ -22,6 +23,24 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
 
   const selected = quotes?.find((q) => q.id === ship) ?? null;
   const items = props.price * qty;
+
+  // Al completar el código postal, se detecta la provincia.
+  useEffect(() => {
+    if (!/^[A-Za-z]?\d{4}[A-Za-z]{0,3}$/.test(zip.trim())) {
+      setZipProvinces(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    fetch(`/api/envio/provincia?cp=${encodeURIComponent(zip.trim())}`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((j: { provinces: string[] }) => {
+        setZipProvinces(j.provinces);
+        if (j.provinces.length === 1) setProvince(j.provinces[0]);
+        else if (j.provinces.length > 1) setProvince((p) => (j.provinces.includes(p) ? p : ''));
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [zip]);
 
   // Cotiza el envío cuando el código postal está completo (y al cambiar la cantidad).
   useEffect(() => {
@@ -113,9 +132,11 @@ export default function CheckoutForm(props: { productId: string; unit: [string, 
           <label className="f">Código postal<input id="zip" name="zip" required inputMode="numeric" autoComplete="postal-code" maxLength={10} value={zip} onChange={(e) => setZip(e.target.value)} placeholder="Ej. 1425" /></label>
           <label className="f">Provincia
             <select id="province" name="province" required value={province} onChange={(e) => setProvince(e.target.value)}>
-              <option value="" disabled>Elegí una</option>
-              {props.provinces.map((p) => <option key={p}>{p}</option>)}
+              <option value="" disabled>{zipProvinces && zipProvinces.length > 1 ? 'Elegí cuál de estas' : 'Elegí una'}</option>
+              {(zipProvinces && zipProvinces.length ? zipProvinces : props.provinces).map((p) => <option key={p}>{p}</option>)}
             </select>
+            {zipProvinces && zipProvinces.length === 1 && <small>Detectada por tu código postal.</small>}
+            {zipProvinces && zipProvinces.length > 1 && <small>Ese código postal es compartido: elegí tu provincia.</small>}
           </label>
         </div>
         {loadingQ && <p className="muted">Calculando el envío…</p>}

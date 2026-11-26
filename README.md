@@ -36,3 +36,7 @@ Mercado Pago propia y sitio de Netlify propio.
 ## Desarrollo
 `npm install`, copiar `.env.example` a `.env.local`, `npm run dev`.
 Sin variables de entorno la página funciona con los textos iniciales y la compra deshabilitada.
+
+## Créditos
+
+Tabla de códigos postales por provincia (`lib/cp-provincias.json`): GeoNames (https://www.geonames.org), licencia CC BY 4.0.
