@@ -42,3 +42,4 @@ Sin variables de entorno la página funciona con los textos iniciales y la compr
 Tabla de códigos postales por provincia (`lib/cp-provincias.json`): GeoNames (https://www.geonames.org), licencia CC BY 4.0.
 Tabla de localidades por código postal (`lib/cp-localidades.json`): GeoNames, CC BY 4.0.
 Listado de sucursales (`lib/sucursales.json`): «Código de Sucursales y Provincias al 26-11-2026» de Correo Argentino; ubicación de cada sucursal con el servicio Georef de datos.gob.ar.
+Códigos postales de Capital por barrio (`lib/caba-cp.json`): armado con el servicio de direcciones USIG del Gobierno de la Ciudad de Buenos Aires.
